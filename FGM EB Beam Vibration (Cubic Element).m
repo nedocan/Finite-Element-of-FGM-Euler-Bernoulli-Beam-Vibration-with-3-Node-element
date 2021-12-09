@@ -139,3 +139,158 @@ nat_freq=freqc;
 freqc=diag(freqc);
 freqc=sort(sqrt(freqc)) %% natural frequencies
 
+
+disp=linspace(0,l,n_nodes);  %% Displacement along x-direction
+
+%%% Mass normalisation of modes %%%
+
+mod=[];
+for i=1:length(freqc)
+    v=vectorc(:,i)/norm(vectorc(:,i));
+    v=v/sqrt(v'*Mglobactive*v);
+    mod=[mod,v];
+end
+
+
+%%% Mode Shapes %%%
+
+number_of_mode_shapes=15; %% Number of modes which are requested
+
+
+%%%%%%%   Clamped-Clamped Boundary Condition   %%%%%%%%%
+
+mod_shapes=[zeros(3,length(freqc));mod;zeros(3,length(freqc))];
+
+for i=1:n_nodes
+    for j=1:length(freqc);
+      u_mod(i,j)=mod_shapes(3*i-2,j);
+    end
+end
+
+for i=1:n_nodes
+    for j=1:length(freqc);
+      w_mod(i,j)=mod_shapes(3*i-1,j);
+    end
+end
+
+for i=1:number_of_mode_shapes
+figure
+subplot(2,1,1)
+plot(disp,u_mod(:,i))
+grid on
+title('Clamped-Clamped')
+xlabel('x')
+ylabel('u')
+subplot(2,1,2)
+plot(disp,w_mod(:,i))
+grid on
+xlabel('x')
+ylabel('w')
+end
+
+
+
+
+%{
+%%%%%%%   Simply Supported-Simply Supported Boundary Condition   %%%%%%%%%
+mod_shapes=[zeros(2,length(freqc));mod(1:length(freqc)-1,:);zeros(2,length(freqc));mod(length(freqc),:)];
+for i=1:n_nodes
+    for j=1:length(freqc);
+      u_mod(i,j)=mod_shapes(3*i-2,j);
+    end
+end
+for i=1:n_nodes
+    for j=1:length(freqc);
+      w_mod(i,j)=mod_shapes(3*i-1,j);
+    end
+end
+for i=1:number_of_mode_shapes
+figure
+subplot(2,1,1)
+plot(disp,u_mod(:,i))
+grid on
+title('Simply Supported-Simply Supported')
+xlabel('x')
+ylabel('u')
+subplot(2,1,2)
+plot(disp,w_mod(:,i))
+grid on
+xlabel('x')
+ylabel('w')
+end
+%%%%%%%   Clamped-Free Boundary Condition   %%%%%%%%%
+mod_shapes=[zeros(3,length(freqc));mod];
+for i=1:n_nodes
+    for j=1:length(freqc);
+      u_mod(i,j)=mod_shapes(3*i-2,j);
+    end
+end
+for i=1:n_nodes
+    for j=1:length(freqc);
+      w_mod(i,j)=mod_shapes(3*i-1,j);
+    end
+end
+for i=1:number_of_mode_shapes
+figure
+subplot(2,1,1)
+plot(disp,u_mod(:,i))
+grid on
+title('Clamped-Free')
+xlabel('x')
+ylabel('u')
+subplot(2,1,2)
+plot(disp,w_mod(:,i))
+grid on
+xlabel('x')
+ylabel('w')
+end
+%%%%%%%   Clamped-Simply Supported Boundary Condition   %%%%%%%%%
+mod_shapes=[zeros(3,length(freqc));mod(1:length(freqc)-1,:);zeros(2,length(freqc));mod(length(freqc),:)];
+number_of_mode_shapes=15
+for i=1:n_nodes
+    for j=1:length(freqc);
+      u_mod(i,j)=mod_shapes(3*i-2,j);
+    end
+end
+for i=1:n_nodes
+    for j=1:length(freqc);
+      w_mod(i,j)=mod_shapes(3*i-1,j);
+    end
+end
+for i=1:number_of_mode_shapes
+figure
+subplot(2,1,1)
+plot(disp,u_mod(:,i))
+grid on
+title('Clamped-Simpþy Supported')
+xlabel('x')
+ylabel('u')
+subplot(2,1,2)
+plot(disp,w_mod(:,i))
+grid on
+xlabel('x')
+ylabel('w')
+end
+%}
+
+
+
+%%% Frequency Response Function %%%
+%% i and j must not be higher than number of active degree of freedom
+
+i=10; %% Measured point
+j=40; %% Excitation point
+frf_modal=0;
+for k=1:length(freqc)
+frf_modal=mod(i,k)*mod(j,k)/(-w^2+nat_freq(k,k))+frf_modal;
+end
+
+frequency=0:5:freqc(10)+10000;
+figure
+plot(frequency,20*log(double(subs(frf_modal,frequency))))
+title('Receptance')
+xlabel('Frequency')
+ylabel('Amplitude (dB)')
+grid on
+
+toc
